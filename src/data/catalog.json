@@ -1,0 +1,25 @@
+{
+  "currency": "EUR",
+  "commercialStatus": "Hipótesis comerciales pendientes de validación",
+  "models": [
+    {"id":"equi-60","name":"Equi 60","area":60,"bedrooms":2,"bathrooms":1,"basePrice":36000,"tag":"Lo esencial, bien pensado","description":"Un hogar compacto que aprovecha cada metro. Dos dormitorios, una zona de día abierta y espacio para lo que de verdad importa.","image":"exterior","rooms":[["Salón · cocina",25],["Dormitorio principal",12],["Dormitorio flexible",9],["Baño",5],["Paso y almacenaje",9]]},
+    {"id":"equi-85","name":"Equi 85","area":85,"bedrooms":3,"bathrooms":2,"basePrice":null,"tag":"Un poco más de espacio para ti","description":"La misma idea de hogar, con más posibilidades. Un tercer dormitorio para tu familia, tus visitas o tu forma de trabajar.","image":"exterior-85","rooms":[["Salón · cocina",32],["Dormitorio principal",14],["Dormitorio 2",11],["Dormitorio 3",10],["Baños",9],["Paso y almacenaje",9]]}
+  ],
+  "finishes":[
+    {"id":"natural","name":"Natural","description":"Madera clara y tonos cálidos.","price":0,"color":"#c6ae8c"},
+    {"id":"mineral","name":"Mineral","description":"Blanco cálido y textura suave.","price":1800,"color":"#e5e3d9"},
+    {"id":"forest","name":"Bosque","description":"Verde profundo y madera natural.","price":2400,"color":"#526550"}
+  ],
+  "equipment":[
+    {"id":"essential","name":"Esencial","description":"Propuesta de cocina y baño funcionales; alcance por confirmar.","price":0},
+    {"id":"comfort","name":"Confort","description":"Mejoras de almacenaje y electrodomésticos; selección por confirmar.","price":3200}
+  ],
+  "extras":[
+    {"id":"terrace","name":"Terraza de madera","description":"Propuesta de 12 m² para disfrutar fuera.","price":3600},
+    {"id":"solar","name":"Preinstalación solar","description":"Canalizaciones previstas; sin paneles ni batería.","price":900},
+    {"id":"storage","name":"Almacenaje adicional","description":"Propuesta de armarios integrados.","price":1200}
+  ],
+  "excluded":["Terreno","Estudio del terreno y proyecto técnico","Licencias y tasas","Cimentación y acometidas","Transporte y medios de elevación","Instalación y puesta en servicio","IVA aplicable"],
+  "contactEndpoint":null,
+  "siteUrl":"https://equihome-viviendas-modulares-mjh.avidbeacon16.chatgpt.site"
+}

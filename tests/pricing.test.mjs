@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { estimate } from '../src/lib/pricing.mjs';
+const catalog=JSON.parse(readFileSync(new URL('../src/data/catalog.json',import.meta.url),'utf8'));
+const base={model:'equi-60',finish:'natural',equipment:'essential',extras:[]};
+test('Equi 60 conserva la hipótesis de 36.000 € y no inventa IVA ni costes',()=>{const r=estimate(catalog,base);assert.equal(r.subtotal,36000);assert.equal(r.tax,null);assert.equal(r.installation,null);assert.equal(r.transport,null);assert.equal(r.total,null);});
+test('Suma acabados, equipamiento y extras sin duplicarlos',()=>{const r=estimate(catalog,{...base,finish:'forest',equipment:'comfort',extras:['terrace','solar','storage','terrace']});assert.equal(r.optionsTotal,11300);assert.equal(r.subtotal,47300);});
+test('Equi 85 sin precio mantiene el subtotal desconocido',()=>{const r=estimate(catalog,{...base,model:'equi-85',extras:['solar']});assert.equal(r.subtotal,null);assert.equal(r.optionsTotal,900);});
+test('Superficie personalizada exige estudio, no extrapola €/m²',()=>{const r=estimate(catalog,{...base,area:75});assert.equal(r.subtotal,null);assert.equal(r.customArea,true);});
+test('Valida límites y descarta datos no reconocidos',()=>{for(const area of ['',0,-1,29,201,'abc',Infinity])assert.throws(()=>estimate(catalog,{...base,area}));for(const input of [{model:'fake'},{finish:'fake'},{equipment:'fake'},{extras:['fake']}])assert.throws(()=>estimate(catalog,{...base,...input}));});
+test('Todas las combinaciones generan una suma consistente',()=>{for(const m of catalog.models)for(const f of catalog.finishes)for(const e of catalog.equipment)for(let bits=0;bits<8;bits++){const extras=catalog.extras.filter((_,i)=>bits&(1<<i));const r=estimate(catalog,{model:m.id,finish:f.id,equipment:e.id,extras:extras.map(x=>x.id)});const expected=f.price+e.price+extras.reduce((s,x)=>s+x.price,0);assert.equal(r.optionsTotal,expected);assert.equal(r.subtotal,m.basePrice===null?null:m.basePrice+expected);}});
