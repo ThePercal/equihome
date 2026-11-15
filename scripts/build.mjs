@@ -29,6 +29,8 @@ export async function build() {
   await mkdir(resolve(root,'dist/lib'),{recursive:true});
   await mkdir(resolve(root,'dist/data'),{recursive:true});
   await cp(resolve(root,'src/app.js'),resolve(root,'dist/app.js'));
+  await cp(resolve(root,'src/interactions.js'),resolve(root,'dist/interactions.js'));
+  await cp(resolve(root,'src/lib/selection.mjs'),resolve(root,'dist/lib/selection.mjs'));
   await cp(resolve(root,'src/lib/pricing.mjs'),resolve(root,'dist/lib/pricing.mjs'));
   await cp(resolve(root,'src/styles/main.css'),resolve(root,'dist/styles.css'));
   await cp(resolve(root,'src/data/catalog.json'),resolve(root,'dist/data/catalog.json'));

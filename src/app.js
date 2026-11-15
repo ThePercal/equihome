@@ -1,4 +1,6 @@
 import { estimate, euros } from './lib/pricing.mjs';
+import { selectionParams, selectionFromParams } from './lib/selection.mjs';
+import { initGallery, initPageInteractions } from './interactions.js';
 
 const siteBase = new URL('.', import.meta.url);
 const siteUrl = path => new URL(path, siteBase).href;
@@ -11,22 +13,8 @@ document.addEventListener('keydown', event => { if (event.key === 'Escape' && me
 navigation?.addEventListener('click', event => { if (event.target.closest('a')) closeMenu(); });
 matchMedia('(min-width: 901px)').addEventListener('change', event => { if (event.matches) closeMenu(); });
 
-document.querySelectorAll('[data-gallery]').forEach(gallery => {
-  const thumbs = [...gallery.querySelectorAll('[data-gallery-index]')]; let current = 0;
-  function show(index) {
-    current = (index + thumbs.length) % thumbs.length;
-    const picture = gallery.querySelector('.gallery-main');
-    const name = thumbs[current].dataset.image;
-    picture.querySelector('source').srcset = [640, 1280, 1920].map(width => `${siteUrl(`images/${name}-${width}.webp`)} ${width}w`).join(', ');
-    picture.querySelector('img').src = siteUrl(`images/${name}-1280.webp`);
-    picture.querySelector('img').alt = `${current === 0 ? 'Exterior' : 'Interior'} ilustrativo de la vivienda`;
-    gallery.querySelector('[data-gallery-count]').textContent = `${current + 1} / ${thumbs.length} · ${current === 0 ? 'Exterior' : 'Interior'}`;
-    thumbs.forEach((button,i) => button.setAttribute('aria-pressed', String(i === current)));
-  }
-  thumbs.forEach((button,i) => button.addEventListener('click', () => show(i)));
-  gallery.querySelector('[data-gallery-prev]').addEventListener('click', () => show(current - 1));
-  gallery.querySelector('[data-gallery-next]').addEventListener('click', () => show(current + 1));
-});
+document.querySelectorAll('[data-gallery]').forEach(gallery => initGallery(gallery, siteUrl));
+initPageInteractions();
 
 function download(filename, text) { const blob = new Blob([text], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 function errorMessage(error) { return error instanceof Error ? error.message : 'No se ha podido completar la operación. Inténtalo de nuevo.'; }
@@ -41,30 +29,63 @@ async function initEstimator(root) {
   const quoteLink = root.querySelector('[data-request-quote]');
   const downloadButton = root.querySelector('[data-download-estimate]');
   const status = root.querySelector('[data-estimate-status]');
-  let catalog, result;
-  try { catalog = await getCatalog(); } catch (error) { output.textContent = errorMessage(error); downloadButton.disabled = true; return; }
+  const shareButton = root.querySelector('[data-share-estimate]');
+  const mobilePrice = root.querySelector('[data-mobile-price]');
+  let catalog, result, sharedUrl = '';
+  let initialMessage = '';
+  try { catalog = await getCatalog(); } catch (error) { output.textContent = errorMessage(error); downloadButton.disabled = true; shareButton.disabled = true; mobilePrice.textContent = 'No disponible'; return; }
   const queryModel = new URLSearchParams(location.search).get('model');
   if ([...form.elements.model.options].some(option => option.value === queryModel)) { form.elements.model.value = queryModel; if (form.elements.area) form.elements.area.value = catalog.models.find(m => m.id === queryModel).area; }
+  try {
+    const restored = selectionFromParams(catalog, new URLSearchParams(location.search));
+    if (restored) {
+      if (!form.elements.area && restored.area !== catalog.models.find(m => m.id === restored.model).area) throw new Error('Superficie incompatible.');
+      form.elements.model.value = restored.model;
+      form.elements.finish.value = restored.finish;
+      form.elements.equipment.value = restored.equipment;
+      if (form.elements.area) form.elements.area.value = restored.area;
+      form.querySelectorAll('[name="extras"]').forEach(input => { input.checked = restored.extras.includes(input.value); });
+      initialMessage = 'Configuración del enlace recuperada.';
+    }
+  } catch { initialMessage = 'El enlace no contiene una configuración válida. Se muestra la selección inicial.'; }
   function update() {
     status.textContent = '';
+    root.querySelector('.share-fallback').hidden = true;
     try {
       const selection = selectionFrom(form); result = estimate(catalog, selection);
       const finish = catalog.finishes.find(f=>f.id===selection.finish); const equipment = catalog.equipment.find(e=>e.id===selection.equipment);
       root.querySelector('[data-model-name]').textContent = result.model.name;
       root.querySelector('[data-selection-description]').textContent = `${result.area} m² · ${finish.name} · ${equipment.name}`;
       output.innerHTML = `<dl class="estimate-lines">${result.lines.map(line => `<div><dt>${line.name}</dt><dd>${euros(line.value)}</dd></div>`).join('')}<div class="options-total"><dt>Total suplementos</dt><dd>${euros(result.optionsTotal)}</dd></div></dl><div class="estimate-subtotal"><span>Subtotal orientativo de vivienda y opciones</span><strong>${euros(result.subtotal)}</strong>${result.customArea?'<p class="small">La superficie personalizada necesita un estudio. No se aplica un precio por metro cuadrado.</p>':''}</div><dl class="estimate-lines pending-lines"><div><dt>Transporte e instalación</dt><dd>Por determinar</dd></div><div><dt>IVA aplicable</dt><dd>Por determinar</dd></div><div><dt>Total del proyecto</dt><dd>Pendiente de presupuesto</dd></div></dl>`;
-      const params = new URLSearchParams({ model: selection.model, area: String(result.area), finish: selection.finish, equipment: selection.equipment });
-      selection.extras.forEach(extra=>params.append('extra',extra));
+      const params = selectionParams(catalog, selection);
+      sharedUrl = siteUrl((root.dataset.mode === 'calculator' ? 'calculadora/' : 'configurador/') + '?' + params);
+      mobilePrice.textContent = euros(result.subtotal);
+      shareButton.disabled = false;
       quoteLink.href = siteUrl('contacto/?' + params);
       quoteLink.removeAttribute('aria-disabled'); downloadButton.disabled = false;
-    } catch (error) { result = null; output.textContent = errorMessage(error); quoteLink.setAttribute('aria-disabled','true'); downloadButton.disabled = true; }
+    } catch (error) { result = null; output.textContent = errorMessage(error); quoteLink.setAttribute('aria-disabled','true'); downloadButton.disabled = true; shareButton.disabled = true; mobilePrice.textContent = 'Revisa los datos'; }
   }
   form.addEventListener('submit', event=>event.preventDefault());
   form.addEventListener('input', event=> { if (event.target.name === 'model' && form.elements.area) form.elements.area.value = catalog.models.find(m=>m.id===event.target.value).area; update(); });
   form.addEventListener('reset', () => setTimeout(update,0));
   quoteLink.addEventListener('click',event=>{if(!result) event.preventDefault();});
   downloadButton.addEventListener('click',()=>{if(result) { const context = form.elements.location ? `Ubicación: ${form.elements.location.value || 'Por definir'}\nTransporte: ${form.elements.transport.selectedOptions[0].textContent}` : ''; download('equihome-estimacion.txt',estimateText(result,catalog,context)); status.textContent = 'Desglose descargado en tu dispositivo. No se ha enviado ninguna solicitud.'; }});
+  shareButton.addEventListener('click', async () => {
+    if (!result) return;
+    const url = sharedUrl;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(url);
+      status.textContent = 'Enlace copiado. Incluye las opciones de la vivienda, sin datos personales.';
+    } catch {
+      const fallback = root.querySelector('.share-fallback');
+      const input = fallback.querySelector('input');
+      fallback.hidden = false; input.value = url; input.focus(); input.select();
+      status.textContent = 'Copia el enlace del campo para guardar o compartir esta configuración.';
+    }
+  });
   update();
+  status.textContent = initialMessage;
 }
 
 function validateForm(form) {

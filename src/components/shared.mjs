@@ -1,7 +1,7 @@
 import { euros } from '../lib/pricing.mjs';
 export const arrow = '<span aria-hidden="true">↗</span>';
 export const logo = `<svg viewBox="0 0 36 39" fill="none" aria-hidden="true"><path d="M3 34V14L18 4l15 10v20H3Z" stroke="currentColor" stroke-width="2.2"/><path d="M10 34V19l8-5 8 5v15M18 14v20M3 14l15 10 15-10" stroke="currentColor" stroke-width="1.7"/></svg><span>equi<span class="logo-light">home</span><span class="logo-dot">.</span></span>`;
-export function picture(name, alt, cls = '', eager = false) { return `<picture class="${cls}"><source type="image/webp" srcset="/images/${name}-640.webp 640w, /images/${name}-1280.webp 1280w, /images/${name}-1920.webp 1920w" sizes="(max-width: 700px) 100vw, 60vw"><img src="/images/${name}-1280.webp" alt="${alt}" width="1536" height="1024" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"></picture>`; }
+export function picture(name, alt, cls = '', eager = false) { return `<picture class="${cls}"><source type="image/webp" srcset="/images/${name}-640.webp 640w, /images/${name}-1280.webp 1280w, /images/${name}-1920.webp 1920w" sizes="${cls === 'hero-picture' ? '92vw' : '(max-width: 700px) 100vw, 60vw'}"><img src="/images/${name}-1280.webp" alt="${alt}" width="1536" height="1024" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"></picture>`; }
 export function modelCard(model, eager = false) {
   return `<article class="model-card">
     <a href="/viviendas/${model.id}/" class="model-image">${picture(model.image, `Visualización ilustrativa de ${model.name}`, '', eager)}<span class="image-tag">VIVIENDA MODULAR · UNA PLANTA</span><span class="round-arrow" aria-hidden="true">↗</span></a>
