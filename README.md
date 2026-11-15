@@ -1,8 +1,16 @@
 # Equihome
 
-Web corporativa y comercial multipágina en español, con catálogo, fichas, configurador de Equi 60, calculadora independiente y preparación de solicitudes.
+Web corporativa y comercial multipágina en español, con catálogo de Equi 60, ficha, configurador de Equi 60, calculadora independiente y preparación de solicitudes.
 
 ## Ejecutar
+
+### Con Live Server en VS Code
+
+Abre `index.html` de la carpeta `Web_EquiHome` con Live Server. La entrada conduce a `equihome/dist/`; también funciona si abres la carpeta `equihome` y su `index.html`. Los estilos, imágenes, fuentes, enlaces, galerías y cálculos resuelven sus rutas dentro de esa carpeta.
+
+Después de modificar el código fuente, ejecuta la compilación indicada abajo. Live Server muestra los archivos ya generados de `dist/`; no compila `src/` por sí solo. El servidor de desarrollo de Node sí recompila automáticamente.
+
+### Con Node.js
 
 Necesita Node.js 22 o posterior. No hay dependencias que instalar.
 
@@ -52,9 +60,9 @@ dist/               # web generada lista para alojamiento estático
 
 Edita `src/data/catalog.json` y vuelve a compilar. `models` contiene nombre, superficie, distribución, imagen y precio base. Un precio desconocido debe ser `null`, nunca cero. Los suplementos viven en `finishes`, `equipment` y `extras`. El cálculo está en `src/lib/pricing.mjs`.
 
-El precio de 36.000 € de Equi 60 procede del encargo y es una hipótesis comercial. Los suplementos son valores ilustrativos editables, también pendientes de validación. Equi 85 queda sin precio. Las superficies personalizadas necesitan estudio y no se extrapolan por €/m². El subtotal de vivienda nunca se presenta como coste total del proyecto. Transporte, instalación e IVA permanecen sin determinar.
+El precio de 36.000 € de Equi 60 procede del encargo y es una hipótesis comercial. Los suplementos son valores ilustrativos editables, también pendientes de validación. Las superficies personalizadas necesitan estudio y no se extrapolan por €/m². El subtotal de vivienda nunca se presenta como coste total del proyecto. Transporte, instalación e IVA permanecen sin determinar.
 
-Al añadir más modelos, revisa también la tabla comparativa de `src/pages/catalog.mjs`, la presentación de inicio y los esquemas conceptuales de `src/components/floorplan.mjs` para que reflejen el catálogo real.
+La presentación de Equi 60 está en `src/pages/catalog.mjs`, la portada en `src/pages/home.mjs` y su esquema conceptual en `src/components/floorplan.mjs`. El catálogo actual tiene un solo modelo.
 
 ## Cambiar imágenes
 

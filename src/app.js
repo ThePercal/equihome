@@ -1,5 +1,8 @@
 import { estimate, euros } from './lib/pricing.mjs';
 
+const siteBase = new URL('.', import.meta.url);
+const siteUrl = path => new URL(path, siteBase).href;
+
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
 function closeMenu() { menuButton?.setAttribute('aria-expanded', 'false'); menuButton?.setAttribute('aria-label', 'Abrir menú'); navigation?.classList.remove('is-open'); }
@@ -14,8 +17,8 @@ document.querySelectorAll('[data-gallery]').forEach(gallery => {
     current = (index + thumbs.length) % thumbs.length;
     const picture = gallery.querySelector('.gallery-main');
     const name = thumbs[current].dataset.image;
-    picture.querySelector('source').srcset = `/images/${name}-640.webp 640w, /images/${name}-1280.webp 1280w, /images/${name}-1920.webp 1920w`;
-    picture.querySelector('img').src = `/images/${name}-1280.webp`;
+    picture.querySelector('source').srcset = [640, 1280, 1920].map(width => `${siteUrl(`images/${name}-${width}.webp`)} ${width}w`).join(', ');
+    picture.querySelector('img').src = siteUrl(`images/${name}-1280.webp`);
     picture.querySelector('img').alt = `${current === 0 ? 'Exterior' : 'Interior'} ilustrativo de la vivienda`;
     gallery.querySelector('[data-gallery-count]').textContent = `${current + 1} / ${thumbs.length} · ${current === 0 ? 'Exterior' : 'Interior'}`;
     thumbs.forEach((button,i) => button.setAttribute('aria-pressed', String(i === current)));
@@ -28,7 +31,7 @@ document.querySelectorAll('[data-gallery]').forEach(gallery => {
 function download(filename, text) { const blob = new Blob([text], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 function errorMessage(error) { return error instanceof Error ? error.message : 'No se ha podido completar la operación. Inténtalo de nuevo.'; }
 let catalogPromise;
-function getCatalog() { return catalogPromise ??= fetch('/data/catalog.json').then(response => { if (!response.ok) throw new Error('No se han podido cargar los precios. Recarga la página para volver a intentarlo.'); return response.json(); }); }
+function getCatalog() { return catalogPromise ??= fetch(siteUrl('data/catalog.json')).then(response => { if (!response.ok) throw new Error('No se han podido cargar los precios. Recarga la página para volver a intentarlo.'); return response.json(); }); }
 function selectionFrom(form) { const data = new FormData(form); return { model: data.get('model'), area: data.has('area') ? data.get('area') : undefined, finish: data.get('finish'), equipment: data.get('equipment'), extras: data.getAll('extras') }; }
 function estimateText(result, catalog, context = '') { return `EQUIHOME · ESTIMACIÓN ORIENTATIVA\n${new Date().toLocaleDateString('es-ES')}\n\n${result.model.name} · Superficie solicitada: ${result.area} m²\n${result.lines.map(line => `${line.name}: ${euros(line.value)}`).join('\n')}\nSuplementos orientativos: ${euros(result.optionsTotal)}\nSubtotal de vivienda y opciones: ${euros(result.subtotal)}${result.customArea?' (la superficie personalizada requiere estudio)':''}\nTotal completo del proyecto: pendiente de presupuesto\nIVA: pendiente de determinar\n${context}\n\nCONCEPTOS PENDIENTES, NO INCLUIDOS EN EL SUBTOTAL\n${catalog.excluded.join('\n')}\n\nTodos los importes son hipótesis comerciales pendientes de validación. No es una oferta contractual. Imágenes y distribuciones ilustrativas.`; }
 
@@ -52,7 +55,7 @@ async function initEstimator(root) {
       output.innerHTML = `<dl class="estimate-lines">${result.lines.map(line => `<div><dt>${line.name}</dt><dd>${euros(line.value)}</dd></div>`).join('')}<div class="options-total"><dt>Total suplementos</dt><dd>${euros(result.optionsTotal)}</dd></div></dl><div class="estimate-subtotal"><span>Subtotal orientativo de vivienda y opciones</span><strong>${euros(result.subtotal)}</strong>${result.customArea?'<p class="small">La superficie personalizada necesita un estudio. No se aplica un precio por metro cuadrado.</p>':''}</div><dl class="estimate-lines pending-lines"><div><dt>Transporte e instalación</dt><dd>Por determinar</dd></div><div><dt>IVA aplicable</dt><dd>Por determinar</dd></div><div><dt>Total del proyecto</dt><dd>Pendiente de presupuesto</dd></div></dl>`;
       const params = new URLSearchParams({ model: selection.model, area: String(result.area), finish: selection.finish, equipment: selection.equipment });
       selection.extras.forEach(extra=>params.append('extra',extra));
-      quoteLink.href = '/contacto/?' + params;
+      quoteLink.href = siteUrl('contacto/?' + params);
       quoteLink.removeAttribute('aria-disabled'); downloadButton.disabled = false;
     } catch (error) { result = null; output.textContent = errorMessage(error); quoteLink.setAttribute('aria-disabled','true'); downloadButton.disabled = true; }
   }

@@ -1,6 +1,7 @@
-import { mkdir, readFile, writeFile, cp } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, cp, rm } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { portableHtml } from './portable-paths.mjs';
 import { layout } from '../src/components/shared.mjs';
 import { home } from '../src/pages/home.mjs';
 import { catalogPage, modelPage } from '../src/pages/catalog.mjs';
@@ -10,8 +11,8 @@ export const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export async function build() {
   const catalog = JSON.parse(await readFile(resolve(root, 'src/data/catalog.json'), 'utf8'));
   const pages = [
-    ['/', 'Tu casa. Tu forma de vivir.', 'Viviendas modulares accesibles, funcionales y sostenibles. Descubre Equi 60 y Equi 85, configura tu hogar y prepara un presupuesto orientativo.', home(catalog)],
-    ['/viviendas/', 'Viviendas modulares Equi 60 y Equi 85', 'Compara las propuestas de viviendas de 60 y 85 m². Distribuciones, materiales y precios orientativos explicados con transparencia.', catalogPage(catalog)],
+    ['/', 'Tu casa. Tu forma de vivir.', 'Viviendas modulares accesibles, funcionales y sostenibles. Descubre Equi 60, configura tu hogar y prepara un presupuesto orientativo.', home(catalog)],
+    ['/viviendas/', 'Equi 60 · Vivienda modular de 60 m²', 'Conoce Equi 60, nuestra propuesta de vivienda modular de 60 m². Distribuciones, materiales y precios orientativos explicados con transparencia.', catalogPage(catalog)],
     ...catalog.models.map(model => [`/viviendas/${model.id}/`, `${model.name} · Vivienda modular de ${model.area} m²`, model.description, modelPage(catalog,model)]),
     ['/configurador/', 'Configura tu Equi 60', 'Elige acabados, equipamiento y extras para el Equi 60. Consulta un desglose orientativo y prepara tu solicitud.', toolPage(catalog)],
     ['/calculadora/', 'Calculadora de presupuesto', 'Estima la vivienda y sus opciones. Distingue los importes orientativos de impuestos, transporte y costes de instalación pendientes.', toolPage(catalog,true)],
@@ -22,6 +23,7 @@ export async function build() {
     ...['aviso-legal','privacidad','cookies'].map(kind=>[`/${kind}/`,{ 'aviso-legal':'Aviso legal',privacidad:'Privacidad',cookies:'Cookies'}[kind],'Información sobre el sitio Equihome y el estado de sus servicios.',legalPage(kind,catalog)]),
     ['/404.html','Página no encontrada','La página que buscas no existe. Explora las viviendas Equihome o vuelve al inicio.',notFound()]
   ];
+  await rm(resolve(root,'dist'),{recursive:true,force:true});
   await mkdir(resolve(root,'dist'),{recursive:true});
   await cp(resolve(root,'public'),resolve(root,'dist'),{recursive:true});
   await mkdir(resolve(root,'dist/lib'),{recursive:true});
@@ -33,7 +35,7 @@ export async function build() {
   for(const [path,title,description,body] of pages) {
     const file=resolve(root,'dist',path.slice(1),path.endsWith('/')?'index.html':'');
     await mkdir(dirname(file),{recursive:true});
-    await writeFile(file,layout({title,description,path,body,catalog,noindex:path==='/404.html'}));
+    await writeFile(file,portableHtml(layout({title,description,path,body,catalog,noindex:path==='/404.html'}),path));
   }
   const origin=catalog.siteUrl?.replace(/\/$/,'');
   await writeFile(resolve(root,'dist/robots.txt'),`User-agent: *\nAllow: /\n${origin?`Sitemap: ${origin}/sitemap.xml\n`:''}`);
