@@ -65,7 +65,8 @@ ul { padding-left: 22px; }
 .header .nav-cta { min-height: 44px; padding: 11px 20px; margin-left: 8px; font-size: 12px; }
 .menu-toggle { display: none; }
 .language-switch { order: 2; display: flex; align-items: center; flex-shrink: 0; gap: 8px; font-size: 11px; color: var(--muted); }
-.language-switch a { display: grid; place-items: center; min-height: 44px; min-width: 28px; }
+.language-switch a { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 28px; }
+.language-flag { display: block; flex-shrink: 0; width: 21px; height: 14px; border-radius: 2px; box-shadow: 0 0 0 1px #294b3b20; }
 .language-switch a[aria-current] { color: var(--forest); font-weight: 750; text-decoration: underline; text-underline-offset: 5px; }
 .header #main-nav { order: 1; margin-left: auto; }
 .header .menu-toggle { order: 3; }
@@ -531,7 +532,8 @@ button:disabled, [aria-disabled=true] { opacity: .55; cursor: not-allowed; }
   :root { --gutter: 22px; }
   .header-inner { gap: 8px; }
   .language-switch { gap: 2px; font-size: 10px; }
-  .language-switch a { min-width: 24px; }
+  .language-switch a { min-width: 24px; flex-direction: column; gap: 2px; }
+  .language-flag { width: 18px; height: 12px; }
   .header .logo { font-size: clamp(23px, 7vw, 29px); gap: 6px; }
   .header .logo svg { width: 26px; }
   html[lang=en] .hero-top h1 { font-size: clamp(34px, 9.8vw, 60px); }

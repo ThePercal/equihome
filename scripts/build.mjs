@@ -5,6 +5,7 @@ import { portableHtml } from './portable-paths.mjs';
 import { routes, localizedPath } from '../src/i18n/routes.mjs';
 import { translateHtml, translateCatalog } from '../src/i18n/translate.mjs';
 import { layout } from '../src/components/shared.mjs';
+import { languageFlags } from '../src/components/flags.mjs';
 import { home } from '../src/pages/home.mjs';
 import { catalogPage, modelPage } from '../src/pages/catalog.mjs';
 import { toolPage } from '../src/pages/tools.mjs';
@@ -53,7 +54,7 @@ export async function build() {
           .replace(/href="(\/[^"]*)"/g, (_, value) => `href="${localizedPath(value, language)}"`);
         if (origin) document = document.replaceAll(`content="${origin}${spanishPath}"`, `content="${origin}${path}"`).replaceAll(`href="${origin}${spanishPath}"`, `href="${origin}${path}"`);
       }
-      const switcher = `<div class="language-switch" role="group" aria-label="${language==='en'?'Language':'Idioma'}"><a data-language="es" lang="es" hreflang="es" href="${spanishPath}" aria-label="Español" ${language==='es'?'aria-current="true"':''}>ES</a><span aria-hidden="true">/</span><a data-language="en" lang="en" hreflang="en" href="${routes[spanishPath]}" aria-label="English" ${language==='en'?'aria-current="true"':''}>EN</a></div>`;
+      const switcher = `<div class="language-switch" role="group" aria-label="${language==='en'?'Language':'Idioma'}"><a data-language="es" lang="es" hreflang="es" href="${spanishPath}" aria-label="Español" ${language==='es'?'aria-current="true"':''}>${languageFlags.es}<span>ES</span></a><span aria-hidden="true">/</span><a data-language="en" lang="en" hreflang="en" href="${routes[spanishPath]}" aria-label="English" ${language==='en'?'aria-current="true"':''}>${languageFlags.en}<span>EN</span></a></div>`;
       document = document.replace('<button class="menu-toggle"', switcher + '<button class="menu-toggle"');
       if (origin && spanishPath !== '/404.html') {
         const alternates = `<link rel="alternate" hreflang="es" href="${origin}${spanishPath}"><link rel="alternate" hreflang="en" href="${origin}${routes[spanishPath]}"><link rel="alternate" hreflang="x-default" href="${origin}${spanishPath}">`;
