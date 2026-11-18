@@ -7,7 +7,7 @@ const files=await walk(dist);const errors=[];let links=0;
 for(const file of files.filter(f=>f.endsWith('.html'))){
  const html=await readFile(file,'utf8');
  if((html.match(/<h1[ >]/g)||[]).length!==1)errors.push(`${file}: debe tener un h1`);
- for(const token of ['lang="es"','name="description"','property="og:title"','<title>']) if(!html.includes(token))errors.push(`${file}: falta ${token}`);
+ for(const token of [file.includes('/en/')?'lang="en"':'lang="es"','name="description"','property="og:title"','<title>']) if(!html.includes(token))errors.push(`${file}: falta ${token}`);
  for(const match of html.matchAll(/(?:href|src)="([^"\s]+)"/g)){
   const href=match[1];if(/^(https?:|data:|mailto:|tel:)/.test(href))continue;
   const [target,hash]=href.split('#');const clean=target.split('?')[0];

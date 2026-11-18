@@ -1,3 +1,4 @@
+import { t, html } from './lib/i18n.mjs';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 export function initGallery(gallery, siteUrl) {
@@ -7,8 +8,8 @@ export function initGallery(gallery, siteUrl) {
   let current = 0;
   const dialog = document.createElement('dialog');
   dialog.className = 'image-viewer';
-  dialog.setAttribute('aria-label', 'Imágenes de Equi 60');
-  dialog.innerHTML = `<div class="viewer-header"><span>Equi 60 <span class="viewer-separator">/</span> Galería</span><button type="button" data-viewer-close aria-label="Cerrar galería" autofocus>✕</button></div><div class="viewer-image"><img alt=""></div><div class="viewer-controls"><button type="button" data-viewer-prev aria-label="Imagen anterior">←</button><span data-viewer-count role="status"></span><button type="button" data-viewer-next aria-label="Imagen siguiente">→</button></div><p>Visualizaciones ilustrativas · No representan acabados contractuales.</p>`;
+  dialog.setAttribute('aria-label', t('Imágenes de Equi 60'));
+  dialog.innerHTML = html(`<div class="viewer-header"><span>Equi 60 <span class="viewer-separator">/</span> Galería</span><button type="button" data-viewer-close aria-label="Cerrar galería" autofocus>✕</button></div><div class="viewer-image"><img alt=""></div><div class="viewer-controls"><button type="button" data-viewer-prev aria-label="Imagen anterior">←</button><span data-viewer-count role="status"></span><button type="button" data-viewer-next aria-label="Imagen siguiente">→</button></div><p>Visualizaciones ilustrativas · No representan acabados contractuales.</p>`);
   document.body.append(dialog);
   const largeImage = dialog.querySelector('img');
   function show(index) {
@@ -17,13 +18,13 @@ export function initGallery(gallery, siteUrl) {
     const label = current === 0 ? 'Exterior' : 'Interior';
     picture.querySelector('source').srcset = [640, 1280, 1920].map(width => `${siteUrl(`images/${name}-${width}.webp`)} ${width}w`).join(', ');
     picture.querySelector('img').src = siteUrl(`images/${name}-1280.webp`);
-    picture.querySelector('img').alt = `${label} ilustrativo de Equi 60`;
+    picture.querySelector('img').alt = `${label} ${t('ilustrativo de Equi 60')}`;
     const caption = `${String(current + 1).padStart(2, '0')} / ${String(thumbs.length).padStart(2, '0')} · ${label}`;
     gallery.querySelector('[data-gallery-count]').textContent = caption;
     thumbs.forEach((button, i) => button.setAttribute('aria-pressed', String(i === current)));
     if (dialog.open) {
       largeImage.src = siteUrl(`images/${name}-1920.webp`);
-      largeImage.alt = `${label} ilustrativo de Equi 60`;
+      largeImage.alt = `${label} ${t('ilustrativo de Equi 60')}`;
       dialog.querySelector('[data-viewer-count]').textContent = caption;
     }
   }

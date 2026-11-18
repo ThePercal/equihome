@@ -13,7 +13,7 @@ export function relativeSitePath(value, pagePath) {
 
 export function portableHtml(html, pagePath) {
   // Un 404 de hosting puede responder en cualquier URL: mantiene rutas de origen.
-  if (pagePath === '/404.html') return html;
+  if (pagePath.endsWith('/404.html')) return html;
   return html
     .replace(/\b(href|src)="([^"]*)"/g, (_, attr, value) => `${attr}="${relativeSitePath(value, pagePath)}"`)
     .replace(/\bsrcset="([^"]*)"/g, (_, value) => `srcset="${value.split(',').map(candidate => {

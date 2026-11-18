@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile, cp, rm } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { portableHtml } from './portable-paths.mjs';
+import { routes, localizedPath } from '../src/i18n/routes.mjs';
+import { translateHtml, translateCatalog } from '../src/i18n/translate.mjs';
 import { layout } from '../src/components/shared.mjs';
 import { home } from '../src/pages/home.mjs';
 import { catalogPage, modelPage } from '../src/pages/catalog.mjs';
@@ -28,21 +30,45 @@ export async function build() {
   await cp(resolve(root,'public'),resolve(root,'dist'),{recursive:true});
   await mkdir(resolve(root,'dist/lib'),{recursive:true});
   await mkdir(resolve(root,'dist/data'),{recursive:true});
+  await cp(resolve(root,'src/i18n'),resolve(root,'dist/i18n'),{recursive:true});
+  await cp(resolve(root,'src/lib/i18n.mjs'),resolve(root,'dist/lib/i18n.mjs'));
   await cp(resolve(root,'src/app.js'),resolve(root,'dist/app.js'));
   await cp(resolve(root,'src/interactions.js'),resolve(root,'dist/interactions.js'));
   await cp(resolve(root,'src/lib/selection.mjs'),resolve(root,'dist/lib/selection.mjs'));
   await cp(resolve(root,'src/lib/pricing.mjs'),resolve(root,'dist/lib/pricing.mjs'));
   await cp(resolve(root,'src/styles/main.css'),resolve(root,'dist/styles.css'));
   await cp(resolve(root,'src/data/catalog.json'),resolve(root,'dist/data/catalog.json'));
-  for(const [path,title,description,body] of pages) {
+  await writeFile(resolve(root,'dist/data/catalog.en.json'),JSON.stringify(translateCatalog(catalog),null,2));
+  const origin=catalog.siteUrl?.replace(/\/$/,'');
+  const missing = new Set();
+  const localizedPages = [];
+  for(const [spanishPath,title,description,body] of pages) {
+    for (const language of ['es','en']) {
+      const path = language === 'en' ? routes[spanishPath] : spanishPath;
+      let document = layout({title,description,path:spanishPath,body,catalog,noindex:spanishPath==='/404.html'});
+      if (language === 'en') {
+        document = translateHtml(document, missing)
+          .replace('<html lang="es">','<html lang="en">')
+          .replace('content="es_ES"','content="en_GB"')
+          .replace(/href="(\/[^"]*)"/g, (_, value) => `href="${localizedPath(value, language)}"`);
+        if (origin) document = document.replaceAll(`content="${origin}${spanishPath}"`, `content="${origin}${path}"`).replaceAll(`href="${origin}${spanishPath}"`, `href="${origin}${path}"`);
+      }
+      const switcher = `<div class="language-switch" role="group" aria-label="${language==='en'?'Language':'Idioma'}"><a data-language="es" lang="es" hreflang="es" href="${spanishPath}" aria-label="Español" ${language==='es'?'aria-current="true"':''}>ES</a><span aria-hidden="true">/</span><a data-language="en" lang="en" hreflang="en" href="${routes[spanishPath]}" aria-label="English" ${language==='en'?'aria-current="true"':''}>EN</a></div>`;
+      document = document.replace('<button class="menu-toggle"', switcher + '<button class="menu-toggle"');
+      if (origin && spanishPath !== '/404.html') {
+        const alternates = `<link rel="alternate" hreflang="es" href="${origin}${spanishPath}"><link rel="alternate" hreflang="en" href="${origin}${routes[spanishPath]}"><link rel="alternate" hreflang="x-default" href="${origin}${spanishPath}">`;
+        document = document.replace('</head>',alternates+'</head>');
+      }
+      localizedPages.push(path);
     const file=resolve(root,'dist',path.slice(1),path.endsWith('/')?'index.html':'');
     await mkdir(dirname(file),{recursive:true});
-    await writeFile(file,portableHtml(layout({title,description,path,body,catalog,noindex:path==='/404.html'}),path));
+    await writeFile(file,portableHtml(document,path));
+    }
   }
-  const origin=catalog.siteUrl?.replace(/\/$/,'');
+  if (missing.size) throw new Error('Missing English translations:\n'+[...missing].join('\n'));
   await writeFile(resolve(root,'dist/robots.txt'),`User-agent: *\nAllow: /\n${origin?`Sitemap: ${origin}/sitemap.xml\n`:''}`);
-  await writeFile(resolve(root,'dist/sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${origin?pages.filter(([path])=>path!=='/404.html').map(([path])=>`<url><loc>${origin}${path}</loc></url>`).join(''):''}</urlset>`);
-  console.log(`Equihome: ${pages.length} páginas generadas en dist/.`);
+  await writeFile(resolve(root,'dist/sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${origin?localizedPages.filter(path=>!path.endsWith('404.html')).map(path=>`<url><loc>${origin}${path}</loc></url>`).join(''):''}</urlset>`);
+  console.log(`Equihome: ${localizedPages.length} páginas generadas en dist/.`);
   return pages;
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) await build();

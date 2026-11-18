@@ -1,6 +1,6 @@
 # Equihome
 
-Web corporativa y comercial multipágina en español, con catálogo de Equi 60, ficha, configurador de Equi 60, calculadora independiente y preparación de solicitudes.
+Web corporativa y comercial multipágina en español e inglés, con catálogo de Equi 60, ficha, configurador de Equi 60, calculadora independiente y preparación de solicitudes.
 
 ## Ejecutar
 
@@ -83,3 +83,14 @@ HTML completo generado para cada URL, títulos y descripciones propios, Open Gra
 El aviso legal y la privacidad están preparados como estructura pendiente de validación. No se han inventado CIF, domicilio, teléfono, equipo, proyectos ejecutados, certificaciones ni testimonios.
 
 Las decisiones y el alcance de las pruebas se documentan en `docs/DECISIONES.md` y `docs/VERIFICACION.md`.
+
+## Idiomas
+
+La versión inglesa se genera en `/en/` y el selector ES/EN enlaza cada página con su equivalente. Conserva las opciones de configuración mediante parámetros, sin datos personales. El contenido estático se traduce durante la compilación; no depende de un traductor externo ni de JavaScript para mostrar el inglés.
+
+- `src/i18n/en.mjs`: textos, atributos accesibles y mensajes ingleses.
+- `src/i18n/routes.mjs`: correspondencia entre rutas españolas e inglesas.
+- `src/i18n/translate.mjs`: traducción de plantillas y catálogo. La compilación falla si falta una traducción estática.
+- `src/lib/i18n.mjs`: idioma de la interfaz interactiva.
+
+El catálogo de precios es único. La compilación genera una copia inglesa conservando identificadores, importes y opciones. Las descargas, validaciones, galerías, formularios, metadatos, canonical y hreflang siguen el idioma seleccionado. La moneda sigue siendo EUR.

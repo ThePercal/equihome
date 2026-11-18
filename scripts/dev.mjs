@@ -30,7 +30,7 @@ const server=createServer(async(req,res)=>{
     if(path!==dist&&!path.startsWith(dist+sep)) {res.writeHead(403);res.end('Forbidden');return;}
     let status=200;
     try {const info=await stat(path);if(info.isDirectory()) {if(!pathname.endsWith('/')){res.writeHead(308,{Location:pathname+'/'});res.end();return;}path=resolve(path,'index.html');}}
-    catch{path=resolve(dist,'404.html');status=404;}
+    catch{path=resolve(dist,pathname.startsWith('/en/')?'en/404.html':'404.html');status=404;}
     const body=await readFile(path);
     res.writeHead(status,{'Content-Type':types[extname(path)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin'});res.end(body);
   } catch {res.writeHead(400);res.end('Bad request');}
